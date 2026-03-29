@@ -235,6 +235,10 @@ class AuctionServer:
                 send_message(sock, {"type": "BID_RESP", "success": False,
                                      "message": "Auction expired."})
                 return
+            if token == ca["seller_token_id"]:
+                send_message(sock, {"type": "BID_RESP", "success": False,
+                                     "message": "Seller cannot bid on own auction."})
+                return
             if bid <= ca["highest_bid"]:
                 send_message(sock, {"type": "BID_RESP", "success": False,
                                      "message": "Bid must exceed current highest."})

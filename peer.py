@@ -81,9 +81,10 @@ class Peer:
     # ------------------------------------------------------------------ #
 
     def _send_items_to_server(self):
-        items = self._scan_shared_dir()
-        if not items:
+        # Spec: after login, requestAuction registers ip_address and port even with no items.
+        if not self.token_id or self.peer_port is None:
             return
+        items = self._scan_shared_dir()
         try:
             resp = self._send_to_server({
                 "type": "REQUEST_AUCTION",
