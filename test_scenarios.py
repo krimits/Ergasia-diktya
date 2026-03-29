@@ -144,19 +144,19 @@ def main():
     # ======================== 1. REGISTER ========================
     banner("1. Register peer (peer-side + server-side)")
 
-    pr("[alice] -> REGISTER username=alice password=pass123")
-    r = send_req({"type": "REGISTER", "username": "alice", "password": "pass123"})
-    pr("[alice] <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[sotiris] -> REGISTER username=sotiris password=pass123")
+    r = send_req({"type": "REGISTER", "username": "sotiris", "password": "pass123"})
+    pr("[sotiris] <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
     pr("")
-    pr("[alice] -> REGISTER username=alice (duplicate)")
-    r = send_req({"type": "REGISTER", "username": "alice", "password": "x"})
-    pr("[alice] <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[sotiris] -> REGISTER username=sotiris (duplicate)")
+    r = send_req({"type": "REGISTER", "username": "sotiris", "password": "x"})
+    pr("[sotiris] <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
     pr("")
-    pr("[bob]   -> REGISTER username=bob password=bobpass")
-    r = send_req({"type": "REGISTER", "username": "bob", "password": "bobpass"})
-    pr("[bob]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[trifonas]   -> REGISTER username=trifonas password=trifonaspass")
+    r = send_req({"type": "REGISTER", "username": "trifonas", "password": "trifonaspass"})
+    pr("[trifonas]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
     for n in ["carol", "dave", "eve"]:
         send_req({"type": "REGISTER", "username": n, "password": n + "pass"})
@@ -165,19 +165,19 @@ def main():
     # ======================== 2. LOGIN ========================
     banner("2. Login peer (peer-side + server-side)")
 
-    port_a = start_listener("alice")
-    pr("[alice] -> LOGIN username=alice password=pass123")
-    r = send_req({"type": "LOGIN", "username": "alice", "password": "pass123"})
-    pr("[alice] <- success=%s  token=%s  msg='%s'" % (r["success"], r["token_id"], r["message"]))
-    tokens["alice"] = r["token_id"]
+    port_a = start_listener("sotiris")
+    pr("[sotiris] -> LOGIN username=sotiris password=pass123")
+    r = send_req({"type": "LOGIN", "username": "sotiris", "password": "pass123"})
+    pr("[sotiris] <- success=%s  token=%s  msg='%s'" % (r["success"], r["token_id"], r["message"]))
+    tokens["sotiris"] = r["token_id"]
 
     pr("")
-    pr("[alice] -> LOGIN again (duplicate session)")
-    r = send_req({"type": "LOGIN", "username": "alice", "password": "pass123"})
-    pr("[alice] <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[sotiris] -> LOGIN again (duplicate session)")
+    r = send_req({"type": "LOGIN", "username": "sotiris", "password": "pass123"})
+    pr("[sotiris] <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
-    ports = {"alice": port_a}
-    for n in ["bob", "carol", "dave", "eve"]:
+    ports = {"sotiris": port_a}
+    for n in ["trifonas", "carol", "dave", "eve"]:
         ports[n] = start_listener(n)
         r = send_req({"type": "LOGIN", "username": n, "password": n + "pass"})
         tokens[n] = r["token_id"]
@@ -190,37 +190,37 @@ def main():
     # ======================== 3. CURRENT AUCTION ========================
     banner("3. requestAuction + getCurrentAuction")
 
-    os.makedirs("shared_directories/alice", exist_ok=True)
-    with open("shared_directories/alice/Object_A_01.txt", "w") as f:
+    os.makedirs("shared_directories/sotiris", exist_ok=True)
+    with open("shared_directories/sotiris/Object_A_01.txt", "w") as f:
         f.write('[object_id: Object_A_01; description: "Vintage Watch"; '
                 'start_bid: "50.00"; auction_duration: "25"]')
 
-    pr("[alice] -> REQUEST_AUCTION  Object_A_01 (Vintage Watch, bid=50, dur=25s)")
-    r = send_req({"type": "REQUEST_AUCTION", "token_id": tokens["alice"],
+    pr("[sotiris] -> REQUEST_AUCTION  Object_A_01 (Vintage Watch, bid=50, dur=25s)")
+    r = send_req({"type": "REQUEST_AUCTION", "token_id": tokens["sotiris"],
                    "items": [{"object_id": "Object_A_01", "description": "Vintage Watch",
                               "start_bid": 50.0, "auction_duration": 25}],
-                   "ip_address": "127.0.0.1", "port": ports["alice"]})
-    pr("[alice] <- %s" % r["message"])
+                   "ip_address": "127.0.0.1", "port": ports["sotiris"]})
+    pr("[sotiris] <- %s" % r["message"])
 
     time.sleep(3)
 
-    pr("[bob]   -> GET_CURRENT_AUCTION")
-    r = send_req({"type": "GET_CURRENT_AUCTION", "token_id": tokens["bob"]})
-    pr("[bob]   <- active=%s  object_id=%s  description=%s" % (
+    pr("[trifonas]   -> GET_CURRENT_AUCTION")
+    r = send_req({"type": "GET_CURRENT_AUCTION", "token_id": tokens["trifonas"]})
+    pr("[trifonas]   <- active=%s  object_id=%s  description=%s" % (
         r.get("active"), r.get("object_id"), r.get("description")))
 
-    pr("[bob]   -> GET_AUCTION_DETAILS")
-    r = send_req({"type": "GET_AUCTION_DETAILS", "token_id": tokens["bob"]})
-    pr("[bob]   <- highest_bid=%.2f  seller_token=%s  remaining=%.1fs" % (
+    pr("[trifonas]   -> GET_AUCTION_DETAILS")
+    r = send_req({"type": "GET_AUCTION_DETAILS", "token_id": tokens["trifonas"]})
+    pr("[trifonas]   <- highest_bid=%.2f  seller_token=%s  remaining=%.1fs" % (
         r.get("highest_bid", 0), r.get("seller_token_id", ""), r.get("remaining_time", 0)))
 
     # ======================== 4. SUCCESSFUL BIDS ========================
     banner("4. Successful bid (placeBid)")
 
-    pr("[bob]   -> PLACE_BID Object_A_01 bid=52.50")
-    r = send_req({"type": "PLACE_BID", "token_id": tokens["bob"],
+    pr("[trifonas]   -> PLACE_BID Object_A_01 bid=52.50")
+    r = send_req({"type": "PLACE_BID", "token_id": tokens["trifonas"],
                    "object_id": "Object_A_01", "bid": 52.50})
-    pr("[bob]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[trifonas]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
     time.sleep(1)
 
     pr("[carol] -> PLACE_BID Object_A_01 bid=56.70")
@@ -254,8 +254,8 @@ def main():
                     pr("    -> %s" % fh.read().strip())
 
     pr("")
-    pr("[alice] seller file Object_A_01.txt exists = %s (should be False)" %
-       os.path.exists("shared_directories/alice/Object_A_01.txt"))
+    pr("[sotiris] seller file Object_A_01.txt exists = %s (should be False)" %
+       os.path.exists("shared_directories/sotiris/Object_A_01.txt"))
     pr("[dave]  buyer  file Object_A_01.txt exists = %s (should be True)" %
        os.path.exists("shared_directories/dave/Object_A_01.txt"))
 
@@ -276,10 +276,10 @@ def main():
     pr("[eve]   <- %s" % r["message"])
     time.sleep(3)
 
-    pr("[bob]   -> PLACE_BID Object_E_01 bid=35.00")
-    r = send_req({"type": "PLACE_BID", "token_id": tokens["bob"],
+    pr("[trifonas]   -> PLACE_BID Object_E_01 bid=35.00")
+    r = send_req({"type": "PLACE_BID", "token_id": tokens["trifonas"],
                    "object_id": "Object_E_01", "bid": 35.0})
-    pr("[bob]   <- %s" % r["message"])
+    pr("[trifonas]   <- %s" % r["message"])
     time.sleep(1)
 
     pr("")
@@ -292,14 +292,14 @@ def main():
     # ======================== 8. LOGOUT ========================
     banner("8. Logout peer (peer-side + server-side)")
 
-    pr("[bob]   -> LOGOUT token=%s" % tokens["bob"])
-    r = send_req({"type": "LOGOUT", "token_id": tokens["bob"]})
-    pr("[bob]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[trifonas]   -> LOGOUT token=%s" % tokens["trifonas"])
+    r = send_req({"type": "LOGOUT", "token_id": tokens["trifonas"]})
+    pr("[trifonas]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
     pr("")
-    pr("[bob]   -> LOGOUT again (invalid token)")
-    r = send_req({"type": "LOGOUT", "token_id": tokens["bob"]})
-    pr("[bob]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
+    pr("[trifonas]   -> LOGOUT again (invalid token)")
+    r = send_req({"type": "LOGOUT", "token_id": tokens["trifonas"]})
+    pr("[trifonas]   <- success=%s  msg='%s'" % (r["success"], r["message"]))
 
     banner("ALL 8 SCENARIOS COMPLETED")
     server.running = False
