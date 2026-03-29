@@ -1,0 +1,127 @@
+[SERVER 21:20:47] Auction manager thread started.
+[SERVER 21:20:47] Auction Server listening on 127.0.
+
+
+==============================================================
+  1. Register peer (peer-side + server-side)
+==============================================================
+[21:20:48] [sotiris] -> REGISTER username=sotiris password=pass123
+[SERVER 21:20:48] REGISTER  sotiris
+[21:20:48] [sotiris] <- success=True  msg='Registered successfully.'
+[21:20:48] 
+[21:20:48] [sotiris] -> REGISTER username=sotiris (duplicate)
+[21:20:48] [sotiris] <- success=False  msg='Username already taken. Choose another.'
+[21:20:48] 
+[21:20:48] [sotiris] <- success=True  token=757777  msg='Login successful.'
+[21:20:48]
+[21:20:48] [sotiris] -> LOGIN again (duplicate session)
+[21:20:48] [sotiris] <- success=False  msg='Already logged in.'
+[SERVER 21:20:48] LOGIN     trifonas  token=317410
+[21:20:48] [trifonas] logged in  token=317410  port=50942
+[SERVER 21:20:49] LOGIN     carol  token=882613
+[21:20:49] [carol] logged in  token=882613  port=50944
+[SERVER 21:20:49] LOGIN     dave  token=929736
+[21:20:49] [dave] logged in  token=929736  port=50946
+[SERVER 21:20:49] LOGIN     eve  token=595959
+[21:20:49] [eve] logged in  token=595959  port=50948
+
+==============================================================
+  3. requestAuction + getCurrentAuction
+==============================================================
+[21:20:49] [sotiris] -> REQUEST_AUCTION  Object_A_01 (Vintage Watch, bid=50, dur=25s)
+[SERVER 21:20:49] QUEUED    Object_A_01  from sotiris
+[SERVER 21:20:49] =======================================================
+[SERVER 21:20:49] AUCTION   Object_A_01 | Vintage Watch
+[21:20:49] [sotiris] <- 1 item(s) queued.
+[SERVER 21:20:49]           start_bid=50.00  duration=25s  seller=sotiris
+[SERVER 21:20:49] =======================================================
+[21:20:52] [trifonas]   -> GET_CURRENT_AUCTION
+[21:20:52] [trifonas]   <- active=True  object_id=Object_A_01  description=Vintage Watch
+[21:20:52] [trifonas]   -> GET_AUCTION_DETAILS
+[21:20:52] [trifonas]   <- highest_bid=50.00  seller_token=757777  remaining=22.0s
+
+==============================================================
+  4. Successful bid (placeBid)
+==============================================================
+[21:20:52] [trifonas]   -> PLACE_BID Object_A_01 bid=52.50
+[SERVER 21:20:52] BID       52.50  by trifonas  on Object_A_01
+[21:20:52] [trifonas]   <- success=True  msg='Bid accepted.'
+[21:20:52] [trifonas] notification -> new bid on Object_A_01: 52.50 by trifonas
+[21:20:52] [carol] notification -> new bid on Object_A_01: 52.50 by trifonas
+[21:20:52] [dave] notification -> new bid on Object_A_01: 52.50 by trifonas
+[21:20:52] [eve] notification -> new bid on Object_A_01: 52.50 by trifonas
+[21:20:52] [sotiris] notification -> new bid on Object_A_01: 52.50 by trifonas
+[21:20:53] [carol] -> PLACE_BID Object_A_01 bid=56.70
+[SERVER 21:20:53] BID       56.70  by carol  on Object_A_01
+[21:20:53] [carol] <- success=True  msg='Bid accepted.'
+[21:20:53] [sotiris] notification -> new bid on Object_A_01: 56.70 by carol
+[21:20:53] [trifonas] notification -> new bid on Object_A_01: 56.70 by carol
+[21:20:53] [carol] notification -> new bid on Object_A_01: 56.70 by carol
+[21:20:53] [dave] notification -> new bid on Object_A_01: 56.70 by carol
+[21:20:53] [eve] notification -> new bid on Object_A_01: 56.70 by carol
+[21:20:54] [dave]  -> PLACE_BID Object_A_01 bid=60.00
+[SERVER 21:20:54] BID       60.00  by dave  on Object_A_01
+[21:20:54] [dave]  <- success=True  msg='Bid accepted.'
+
+==============================================================
+  5. Auction ends - awarded to highest bidder
+==============================================================
+[21:20:54] Waiting for auction Object_A_01 to end (~20s remaining)...
+[21:20:54] [sotiris] notification -> new bid on Object_A_01: 60.00 by dave
+[21:20:54] [trifonas] notification -> new bid on Object_A_01: 60.00 by dave
+[21:20:54] [dave] notification -> new bid on Object_A_01: 60.00 by dave
+[21:20:54] [eve] notification -> new bid on Object_A_01: 60.00 by dave
+[21:20:54] [carol] notification -> new bid on Object_A_01: 60.00 by dave
+[SERVER 21:21:14] ENDED     Object_A_01  won by dave  for 60.00  (seller: sotiris)
+[21:21:14] [dave] *** WON auction Object_A_01 for 60.00 ***
+[21:21:14] [sotiris] *** SOLD Object_A_01 for 60.00 to dave ***
+[21:21:15] [sotiris] Sold Object_A_01 -> file transferred & removed
+[21:21:15] [dave] Transaction OK -> file saved to shared_directories\dave\Object_A_01.txt
+[SERVER 21:21:15] PURCHASE  dave  bought Object_A_01
+[21:21:15] [dave] NOTIFY_PURCHASE sent to server
+
+==============================================================
+  6. Successful transaction (P2P file transfer)
+==============================================================
+[21:21:19] --- Checking shared_directories ---
+[21:21:19]   dave/ : ['Object_A_01.txt']
+[21:21:19]     -> [object_id: Object_A_01; description: "Vintage Watch"; start_bid: "50.00"; auction_duration: "25"]
+[21:21:19]   sotiris/ : (empty)
+[21:21:19]
+[21:21:19] [sotiris] seller file Object_A_01.txt exists = False (should be False)
+[21:21:19] [dave]  buyer  file Object_A_01.txt exists = True (should be True)
+
+==============================================================
+  7. Auction cancellation - seller disconnects
+==============================================================
+[21:21:19] [eve]   -> REQUEST_AUCTION  Object_E_01 (Rare Book, bid=30, dur=40s)
+[SERVER 21:21:19] QUEUED    Object_E_01  from eve
+[21:21:19] [eve]   <- 1 item(s) queued.
+[SERVER 21:21:19] =======================================================
+[SERVER 21:21:19] AUCTION   Object_E_01 | Rare Book
+[SERVER 21:21:19]           start_bid=30.00  duration=40s  seller=eve
+[SERVER 21:21:19] =======================================================
+[21:21:22] [trifonas]   -> PLACE_BID Object_E_01 bid=35.00
+[SERVER 21:21:22] BID       35.00  by trifonas  on Object_E_01
+[21:21:22] [trifonas]   <- Bid accepted.
+[21:21:22] [sotiris] notification -> new bid on Object_E_01: 35.00 by trifonas
+[21:21:22] [trifonas] notification -> new bid on Object_E_01: 35.00 by trifonas
+[21:21:22] [carol] notification -> new bid on Object_E_01: 35.00 by trifonas
+[21:21:22] [dave] notification -> new bid on Object_E_01: 35.00 by trifonas
+[21:21:22] [eve] notification -> new bid on Object_E_01: 35.00 by trifonas
+[21:21:23] 
+[21:21:23] >>> [eve] DISCONNECTING (simulating seller crash) <<<
+[21:21:25] Waiting for server checkActive to detect disconnect...
+[SERVER 21:21:27] CANCELLED Object_E_01  reason: Seller disconnected
+[21:21:27] [trifonas] AUCTION CANCELLED: Object_E_01 reason=Seller disconnected
+
+==============================================================
+  8. Logout peer (peer-side + server-side)
+==============================================================
+[21:21:37] [trifonas]   -> LOGOUT token=317410
+[SERVER 21:21:37] LOGOUT    trifonas
+[21:21:37] [trifonas]   <- success=True  msg='Logged out.'
+[21:21:37]
+[21:21:37] [trifonas]   -> LOGOUT again (invalid token)
+[21:21:37] [trifonas]   <- success=False  msg='Invalid token.'
+
